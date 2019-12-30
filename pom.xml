@@ -9,7 +9,7 @@
   <version>0.1</version>
 
   <name>jwt-token-gen</name>
-  <url>http://www.example.com</url>
+  <url>https://github.com/phaneesh/jwt-token-gen</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
