@@ -58,11 +58,12 @@ public class App {
           .replace("-----END PRIVATE KEY-----\n", "");
       Vertx vertx = Vertx.vertx();
       JWTAuthOptions config = new JWTAuthOptions()
-          .addPubSecKey(new PubSecKeyOptions()
-              .setAlgorithm(commandLine.getOptionValue("m"))
-              .setPublicKey(publicKey)
-              .setSecretKey(privateKey));
-
+          .addPubSecKey(new PubSecKeyOptions(
+              new JsonObject()
+                .put("algorithm", commandLine.getOptionValue("m"))
+                .put("publicKey", publicKey)
+                .put("secretKey", privateKey)
+          ));
       JWTAuth provider = JWTAuth.create(vertx, config);
       JWTOptions jwtOptions = new JWTOptions();
       jwtOptions.setAlgorithm(commandLine.getOptionValue("m"));
@@ -73,7 +74,7 @@ public class App {
       jwtOptions.setIssuer(commandLine.getOptionValue("i"));
       jwtOptions.setSubject(commandLine.getOptionValue("u"));
       if (commandLine.hasOption("n")) {
-        jwtOptions.setNoTimestamp(true);
+        jwtOptions.setExpiresInMinutes(26280000);
       } else {
         jwtOptions.setExpiresInSeconds(Integer.parseInt(commandLine.getOptionValue("e")));
       }
