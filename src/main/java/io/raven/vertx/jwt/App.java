@@ -99,6 +99,6 @@ public class App {
 
   private static void showHelp(Options options) {
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp("java -jar jwt-token-gen-0.1-shaded.jar", options);
+    formatter.printHelp("./token-generator", options);
   }
 }
