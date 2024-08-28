@@ -2,11 +2,11 @@
 A flexible way to generate a JWT for any given application (using Public & private keys) 
 
 ##### Dependencies
-* Java 11
+* Java 21
 
 ##### Build
 ```bash
-mvn clean package
+mvn -U -Pnative -Dagent clean package
 ```
 
 #### Generating a public and private key
@@ -24,40 +24,48 @@ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 ```
 
 **Note:** 
-* Please stove away the private and public and private keys in a safe secured place. 
-  Typically this is placed in /etc/security/<application> directory which will have restricted access
+* Please store the private and public and private keys in a safe secured place. 
+  Typically,
+  this is placed in /etc/security/<application> directory which will have restricted access
 * Private key is required to generate the token. To verify the token only public key is enough.
    
 ##### Usage
-```
-usage: java -jar jwt-token-gen-0.1-shaded.jar
- -a,--audience <arg>      Audience
- -c,--claims <arg>        Custom claims Ex: claim:claimvalue
- -e,--expiry <arg>        Expiry in seconds
- -i,--issuer <arg>        Issuer
- -m,--algo <arg>          Algorithm
- -n,--noExpiry            No Expiry
- -p,--public <arg>        Path to public key (in pem format)
- -r,--permissions <arg>   Comma separated list of permissions
- -s,--private <arg>       Path to private key (in pem format)
- -u,--subject <arg>       Subject  
+```bash
+./token-generator -h
+Usage: token-generator [-hnV] [-a=<audience>] [-c=<claims>] [-e=<expiry>]
+                       -i=<issuer> -m=<algorithm> -p=<publicKey>
+                       [-r=<permissions>] -s=<privateKey> -u=<subject>
+Generates a JWT token using the provided public and private keys
+  -a, --audience=<audience>  Audience
+  -c, --claims=<claims>      Custom claims Ex: claim:claim value
+  -e, --expiry=<expiry>      Expiry in seconds
+  -h, --help                 Show this help message and exit.
+  -i, --issuer=<issuer>      Issuer
+  -m, --algo=<algorithm>     Algorithm
+  -n, --noExpiry             No Expiry
+  -p, --public=<publicKey>   Path to public key (in pem format)
+  -r, --permissions=<permissions>
+                             Comma separated list of permissions
+  -s, --private=<privateKey> Path to private key (in pem format)
+  -u, --subject=<subject>    Subject
+  -V, --version              Print version information and exit.
 ```
 
 ##### Examples
 * Using short options (Token without expiry)
 ```bash
-java -jar jwt-token-gen-0.1-shaded.jar -a "user" -i "testapp" -m "RS256" -p "public.pem" -s "private_key.pem" -u "mytestuser" -n \
+./token-generator -a "user" -i "testapp" -m "RS256" -p "public.pem" -s "private_key.pem" -u "mytestuser" -n \
     -c "test:test,test1:test1" -r "permission1,permission2" 
 ```
 * Using long options (Token without expiry)
 ```bash
-java -jar jwt-token-gen-0.1-shaded.jar --audience "user" --issuer "testapp" --algo "RS256" --public "public.pem" \ 
+./token-generator --audience "user" --issuer "testapp" --algo "RS256" --public "public.pem" \ 
     --private "private_key.pem" --subject "mytestuser" --noExpiry --claims "test:test,test1:test1" \
     --permissions "permission1,permission2" 
 ```
 * Token with expiry (of 30 days)
 ```bash
-java -jar jwt-token-gen-0.1-shaded.jar --audience "user" --issuer "testapp" --algo "RS256" --public "public.pem" \ 
+./token-generator --audience "user" --issuer "testapp" --algo "RS256" --public "public.pem" \ 
     --private "private_key.pem" --subject "mytestuser" --expiry "2592000" --claims "test:test,test1:test1" \
     --permissions "permission1,permission2" 
 ```

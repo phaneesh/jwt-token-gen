@@ -8,97 +8,107 @@ import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.jwt.JWTOptions;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 /**
  * Vert.x JWT token generator
  */
-public class App {
+@Command(name = "token-generator", mixinStandardHelpOptions = true, version = "1.0",
+    description = "Generates a JWT token using the provided public and private keys")
+public class App implements Callable<Integer> {
 
-  private static final Logger log = LoggerFactory.getLogger("jwt-token-gen");
+  private static final Logger log = LoggerFactory.getLogger("token-generator");
 
-  public static void main(String[] args) {
-    // create the command line parser
-    CommandLineParser parser = new DefaultParser();
-    CommandLine commandLine = null;
-    // create the Options
-    Options options = new Options();
-    options.addRequiredOption( "m", "algo", true, "Algorithm");
-    options.addRequiredOption( "p", "public", true, "Path to public key (in pem format)" );
-    options.addRequiredOption( "s", "private", true, "Path to private key (in pem format)");
-    options.addOption( "a", "audience", true, "Audience");
-    options.addRequiredOption( "i", "issuer", true, "Issuer");
-    options.addRequiredOption( "u", "subject", true, "Subject");
-    options.addOption( "e", "expiry", true, "Expiry in seconds");
-    options.addOption( "n", "noExpiry", false, "No Expiry");
-    options.addOption( "c", "claims", true, "Custom claims Ex: claim:claimvalue");
-    options.addOption( "r", "permissions", true, "Comma separated list of permissions");
+  @Option(names = {"-m", "--algo"}, required = true, description = "Algorithm")
+  private String algorithm;
+
+  @Option(names = {"-p", "--public"}, required = true, description = "Path to public key (in pem format)")
+  private String publicKey;
+
+  @Option(names = {"-s", "--private"}, required = true, description = "Path to private key (in pem format)")
+  private String privateKey;
+
+  @Option(names = {"-a", "--audience"}, description = "Audience")
+  private String audience;
+
+  @Option(names = {"-i", "--issuer"}, required = true, description = "Issuer")
+  private String issuer;
+
+  @Option(names = {"-u", "--subject"}, required = true, description = "Subject")
+  private String subject;
+
+  @Option(names = {"-e", "--expiry"}, description = "Expiry in seconds")
+  private Integer expiry;
+
+  @Option(names = {"-n", "--noExpiry"}, description = "No Expiry")
+  private boolean noExpiry;
+
+  @Option(names = {"-c", "--claims"}, description = "Custom claims Ex: claim:claim value")
+  private String claims;
+
+  @Option(names = {"-r", "--permissions"}, description = "Comma separated list of permissions")
+  private String permissions;
+
+  public Integer call() {
     try {
-      commandLine = parser.parse(options, args, true);
-    } catch(ParseException e) {
-      showHelp(options);
-      System.exit(0);
-    }
-    try {
-      String publicKey = Files.readString(Paths.get(commandLine.getOptionValue("p")))
+      String publicKeyData = Files.readString(Paths.get(publicKey))
           .replace("-----BEGIN PUBLIC KEY-----\n", "")
           .replace("-----END PUBLIC KEY-----\n", "");
-      String privateKey = Files.readString(Paths.get(commandLine.getOptionValue("s")))
+      String privateKeyData = Files.readString(Paths.get(privateKey))
           .replace("-----BEGIN PRIVATE KEY-----\n", "")
           .replace("-----END PRIVATE KEY-----\n", "");
-      Vertx vertx = Vertx.vertx();
-      JWTAuthOptions config = new JWTAuthOptions()
-          .addPubSecKey(new PubSecKeyOptions(
-              new JsonObject()
-                .put("algorithm", commandLine.getOptionValue("m"))
-                .put("publicKey", publicKey)
-                .put("secretKey", privateKey)
-          ));
-      JWTAuth provider = JWTAuth.create(vertx, config);
-      JWTOptions jwtOptions = new JWTOptions();
-      jwtOptions.setAlgorithm(commandLine.getOptionValue("m"));
-      JsonObject claims = new JsonObject();
-      if(commandLine.hasOption('a')) {
-        jwtOptions.setAudience(Arrays.asList(commandLine.getOptionValue('a').split(",")));
+    Vertx vertx = Vertx.vertx();
+    JWTAuthOptions config = new JWTAuthOptions()
+        .addPubSecKey(new PubSecKeyOptions(
+            new JsonObject()
+                .put("algorithm", algorithm)
+                .put("publicKey", publicKeyData)
+                .put("secretKey", privateKeyData)
+        ));
+    JWTAuth provider = JWTAuth.create(vertx, config);
+    JWTOptions jwtOptions = new JWTOptions();
+    jwtOptions.setAlgorithm(algorithm);
+    JsonObject claimsObject = new JsonObject();
+    if (Objects.nonNull(audience)) {
+      jwtOptions.setAudience(Arrays.asList(audience.split(",")));
+    }
+    jwtOptions.setIssuer(issuer);
+    jwtOptions.setSubject(subject);
+    if (noExpiry) {
+      jwtOptions.setExpiresInMinutes(26280000);
+    } else {
+      jwtOptions.setExpiresInSeconds(expiry);
+    }
+    if(Objects.nonNull(claims)) {
+      String[] claimTokens = claims.split(",");
+      for(String c : claimTokens) {
+        String[] claimToken = c.split(":");
+        claimsObject.put(claimToken[0], claimToken[1]);
       }
-      jwtOptions.setIssuer(commandLine.getOptionValue("i"));
-      jwtOptions.setSubject(commandLine.getOptionValue("u"));
-      if (commandLine.hasOption("n")) {
-        jwtOptions.setExpiresInMinutes(26280000);
-      } else {
-        jwtOptions.setExpiresInSeconds(Integer.parseInt(commandLine.getOptionValue("e")));
-      }
-      if(commandLine.hasOption('c')) {
-        String[] claimTokens = commandLine.getOptionValue('c').split(",");
-        for(String c : claimTokens) {
-          String[] claimToken = c.split(":");
-          claims.put(claimToken[0], claimToken[1]);
-        }
-      }
-      if(commandLine.hasOption('r')) {
-        jwtOptions.setPermissions(Arrays.asList(commandLine.getOptionValues('r')));
-      }
-      final String token = provider.generateToken(claims, jwtOptions);
-      log.debug("JWT Options: " +jwtOptions.toJSON().encodePrettily());
-      log.debug("JWT Claims: " +claims.encodePrettily());
-      log.info("Token: " + token);
+    }
+    if(Objects.nonNull(permissions)) {
+      jwtOptions.setPermissions(Arrays.asList(permissions.split(",")));
+    }
+    final String token = provider.generateToken(claimsObject, jwtOptions);
+    log.debug("JWT Options: " +jwtOptions.toJSON().encodePrettily());
+    log.debug("JWT Claims: " +claimsObject.encodePrettily());
+    log.info("Token: " + token);
+    return 0;
     } catch(IOException e) {
       log.error("Error generating token!", e);
+      return -1;
     }
   }
 
-  private static void showHelp(Options options) {
-    HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp("./token-generator", options);
+  public static void main(String[] args) {
+    int exitCode = new picocli.CommandLine(new App()).execute(args);
+    System.exit(exitCode);
   }
 }
