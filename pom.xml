@@ -15,25 +15,31 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>21</java.version>
-    <vertex.version>3.8.5</vertex.version>
+    <jose4j.version>0.9.6</jose4j.version>
     <picocli.version>4.7.6</picocli.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <exec-maven-plugin.version>3.4.1</exec-maven-plugin.version>
     <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
     <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
     <native-maven-plugin.version>0.10.2</native-maven-plugin.version>
+    <slf4j.version>1.7.36</slf4j.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-auth-jwt</artifactId>
-      <version>${vertex.version}</version>
+      <groupId>org.bitbucket.b_c</groupId>
+      <artifactId>jose4j</artifactId>
+      <version>${jose4j.version}</version>
     </dependency>
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
       <version>${picocli.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 
@@ -70,7 +76,7 @@
               <arguments>
                 <argument>-classpath</argument>
                 <classpath/>
-                <argument>io.raven.vertx.jwt.App</argument>
+                <argument>io.dyuti.jwt.App</argument>
               </arguments>
             </configuration>
           </execution>
@@ -109,7 +115,7 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>io.raven.vertx.jwt.App</mainClass>
+              <mainClass>io.dyuti.jwt.App</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -130,17 +136,12 @@
           <archive>
             <manifest>
               <addClasspath>true</addClasspath>
-              <mainClass>io.raven.vertx.jwt.App</mainClass>
+              <mainClass>io.dyuti.jwt.App</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
-          <containerDescriptorHandlers>
-            <containerDescriptorHandler>
-              <handlerName>metaInf-services</handlerName>
-            </containerDescriptorHandler>
-          </containerDescriptorHandlers>
         </configuration>
       </plugin>
     </plugins>
@@ -161,13 +162,6 @@
                   <goal>compile-no-fork</goal>
                 </goals>
                 <phase>package</phase>
-              </execution>
-              <execution>
-                <id>test-native</id>
-                <goals>
-                  <goal>test</goal>
-                </goals>
-                <phase>test</phase>
               </execution>
             </executions>
             <configuration>

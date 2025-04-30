@@ -34,38 +34,38 @@ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 ./token-generator -h
 Usage: token-generator [-hnV] [-a=<audience>] [-c=<claims>] [-e=<expiry>]
                        -i=<issuer> -m=<algorithm> -p=<publicKey>
-                       [-r=<permissions>] -s=<privateKey> -u=<subject>
+                       -s=<privateKey> -u=<subject>
+                       [-o=<operation>] [-t=<token_to_be_verified>]
 Generates a JWT token using the provided public and private keys
   -a, --audience=<audience>  Audience
   -c, --claims=<claims>      Custom claims Ex: claim:claim value
   -e, --expiry=<expiry>      Expiry in seconds
   -h, --help                 Show this help message and exit.
   -i, --issuer=<issuer>      Issuer
-  -m, --algo=<algorithm>     Algorithm
   -n, --noExpiry             No Expiry
   -p, --public=<publicKey>   Path to public key (in pem format)
-  -r, --permissions=<permissions>
-                             Comma separated list of permissions
+  -o, --operation=<operation>
+                             GENERATE or VERIFY 
   -s, --private=<privateKey> Path to private key (in pem format)
   -u, --subject=<subject>    Subject
+  -t, --token=<token_to_be_verified>
+                                 Token to be verified
   -V, --version              Print version information and exit.
 ```
 
 ##### Examples
 * Using short options (Token without expiry)
 ```bash
-./token-generator -a "user" -i "testapp" -m "RS256" -p "public.pem" -s "private_key.pem" -u "mytestuser" -n \
-    -c "test:test,test1:test1" -r "permission1,permission2" 
+./token-generator -a "user" -i "testapp" -p "public.pem" -s "private_key.pem" -u "mytestuser" -n \
+    -c "test:test,test1:test1"  
 ```
 * Using long options (Token without expiry)
 ```bash
-./token-generator --audience "user" --issuer "testapp" --algo "RS256" --public "public.pem" \ 
-    --private "private_key.pem" --subject "mytestuser" --noExpiry --claims "test:test,test1:test1" \
-    --permissions "permission1,permission2" 
+./token-generator --audience "user" --issuer "testapp" --public "public.pem" \ 
+    --private "private_key.pem" --subject "mytestuser" --noExpiry --claims "test:test,test1:test1" 
 ```
 * Token with expiry (of 30 days)
 ```bash
-./token-generator --audience "user" --issuer "testapp" --algo "RS256" --public "public.pem" \ 
-    --private "private_key.pem" --subject "mytestuser" --expiry "2592000" --claims "test:test,test1:test1" \
-    --permissions "permission1,permission2" 
+./token-generator --audience "user" --issuer "testapp" --public "public.pem" \ 
+    --private "private_key.pem" --subject "mytestuser" --expiry "2592000" --claims "test:test,test1:test1"
 ```
