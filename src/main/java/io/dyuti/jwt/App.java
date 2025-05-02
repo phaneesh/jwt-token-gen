@@ -188,7 +188,7 @@ public class App implements Callable<Integer> {
         .setRequireExpirationTime()
         .setAllowedClockSkewInSeconds(30)
         .setVerificationKey(keyPair.getPublic())
-        .setExpectedAudience("ROLE_ADMIN", "ROLE_USER", "ROLE_OPERATOR")
+        .setSkipDefaultAudienceValidation()
         .build();
     try {
       JwtClaims claims = jwtConsumer.processToClaims(decryptToken(token, keyPair));
